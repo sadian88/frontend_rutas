@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    @apply min-h-screen bg-slate-100 text-slate-900 font-sans;
+  }
+
+  a {
+    @apply text-inherit no-underline;
+  }
+
+  ::selection {
+    @apply bg-primary-600 text-white;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl shadow-card p-6;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-2 rounded-full bg-primary-50 px-3 py-1 text-sm font-semibold text-primary-600;
+  }
+
+  .desktop-only {
+    @apply block;
+  }
+
+  .mobile-only {
+    @apply hidden;
+  }
+}
+
+@layer utilities {
+  .scroll-h {
+    @apply flex gap-3 overflow-x-auto pb-1;
+    scrollbar-width: thin;
+  }
+}
+
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: block;
+  }
+}

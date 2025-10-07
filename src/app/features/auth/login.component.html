@@ -1,0 +1,57 @@
+﻿<div class="min-h-screen bg-slate-950 flex items-center justify-center px-4 py-12">
+  <div class="w-full max-w-md space-y-8">
+    <div class="text-center space-y-2">
+      <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600 text-2xl font-semibold text-white shadow-xl shadow-primary-600/40">
+        GG
+      </div>
+      <h1 class="text-3xl font-bold text-white">Gestion de gruas</h1>
+      <p class="text-sm text-slate-300">Ingresa tus credenciales para continuar</p>
+    </div>
+
+    <form class="bg-white/95 rounded-3xl shadow-card p-8 space-y-6 backdrop-blur" [formGroup]="form" (ngSubmit)="ingresar()">
+      <div class="space-y-4">
+        <label class="block text-sm font-medium text-slate-700">
+          Correo
+          <input
+            type="email"
+            formControlName="email"
+            placeholder="correo@empresa.com"
+            class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+          />
+          <span class="mt-1 block text-sm text-red-500" *ngIf="form.controls.email.touched && form.controls.email.invalid">
+            Debes ingresar un correo valido.
+          </span>
+        </label>
+
+        <label class="block text-sm font-medium text-slate-700">
+          Contrasena
+          <input
+            type="password"
+            formControlName="password"
+            placeholder="******"
+            class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+          />
+          <span class="mt-1 block text-sm text-red-500" *ngIf="form.controls.password.touched && form.controls.password.invalid">
+            Debes ingresar una contrasena de al menos 6 caracteres.
+          </span>
+        </label>
+      </div>
+
+      <p class="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600" *ngIf="mensajeError">
+        {{ mensajeError }}
+      </p>
+
+      <button
+        type="submit"
+        [disabled]="loading"
+        class="flex w-full items-center justify-center rounded-2xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-600/30 transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-primary-400"
+      >
+        {{ loading ? 'Ingresando...' : 'Ingresar' }}
+      </button>
+    </form>
+
+    <p class="text-center text-xs text-slate-500">
+      &copy; {{ year }} Gestion de gruas. Todos los derechos reservados.
+    </p>
+  </div>
+</div>

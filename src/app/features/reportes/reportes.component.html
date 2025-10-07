@@ -1,0 +1,110 @@
+<div class="reportes">
+  <section class="panel">
+    <h2>Balance de gastos y recargas</h2>
+    <form [formGroup]="form" (ngSubmit)="generarReporte()" class="form">
+      <div class="grid">
+        <label>
+          <span>Agrupacion</span>
+          <select formControlName="agrupacion">
+            <option value="mes">Por mes</option>
+            <option value="ruta">Por ruta</option>
+            <option value="sede">Por sede</option>
+            <option value="conductor">Por conductor</option>
+          </select>
+        </label>
+        <label>
+          <span>Desde</span>
+          <input type="date" formControlName="desde" />
+        </label>
+        <label>
+          <span>Hasta</span>
+          <input type="date" formControlName="hasta" />
+        </label>
+      </div>
+
+      <div class="grid">
+        <label>
+          <span>Sede</span>
+          <select formControlName="sede">
+            <option value="">Todas</option>
+            <option *ngFor="let sede of sedes()" [value]="sede._id">{{ sede.nombre }}</option>
+          </select>
+        </label>
+        <label>
+          <span>Ruta</span>
+          <select formControlName="ruta">
+            <option value="">Todas</option>
+            <option *ngFor="let ruta of rutas()" [value]="ruta._id">{{ ruta.nombre }}</option>
+          </select>
+        </label>
+        <label>
+          <span>Conductor</span>
+          <select formControlName="conductor">
+            <option value="">Todos</option>
+            <option *ngFor="let conductor of conductores()" [value]="conductor._id">
+              {{ conductor.nombre }}
+            </option>
+          </select>
+        </label>
+      </div>
+
+      <button type="submit" [disabled]="cargando()">{{ cargando() ? 'Generando...' : 'Generar reporte' }}</button>
+    </form>
+  </section>
+
+  <section class="resultado" *ngIf="resultados().length">
+    <section class="chart card" *ngIf="chartOptions() as chart">
+      <header class="chart__header">
+        <h3>{{ chartTitle() }}</h3>
+        <small>Datos según filtros aplicados</small>
+      </header>
+      <apx-chart
+        [series]="chart.series"
+        [chart]="chart.chart"
+        [dataLabels]="chart.dataLabels || undefined"
+        [xaxis]="chart.xaxis || undefined"
+        [legend]="chart.legend || undefined"
+        [responsive]="chart.responsive || undefined"
+        [colors]="chart.colors || undefined"
+      ></apx-chart>
+    </section>
+
+    <div class="tabla ag-theme-quartz desktop-only">
+      <ag-grid-angular
+        [columnDefs]="resultadoColumnDefs"
+        [defaultColDef]="defaultColDef"
+        [rowData]="resultados()"
+        class="ag-theme-quartz"
+        [animateRows]="true"
+        style="width: 100%; height: 320px;"
+      ></ag-grid-angular>
+    </div>
+    <div class="mobile-list mobile-only">
+      <article class="reporte-card" *ngFor="let item of resultados()">
+        <header>
+          <h4>{{ item.etiqueta }}</h4>
+          <span class="clave">#{{ item.key }}</span>
+        </header>
+        <div class="reporte-card__body">
+          <div>
+            <small>Gastos</small>
+            <strong>{{ formatoMoneda(item.totalGastos) }}</strong>
+          </div>
+          <div>
+            <small>Recargas</small>
+            <strong>{{ formatoMoneda(item.totalRecargas) }}</strong>
+          </div>
+          <div [class.negativo]="item.balance < 0">
+            <small>Balance</small>
+            <strong>{{ formatoMoneda(item.balance) }}</strong>
+          </div>
+        </div>
+      </article>
+    </div>
+    <div class="totales" *ngIf="totales() as resumen">
+      <p>Gastos totales: {{ formatoMoneda(resumen.totalGastos) }}</p>
+      <p>Recargas totales: {{ formatoMoneda(resumen.totalRecargas) }}</p>
+      <p [class.negativo]="resumen.balance < 0">Balance general: {{ formatoMoneda(resumen.balance) }}</p>
+    </div>
+  </section>
+</div>

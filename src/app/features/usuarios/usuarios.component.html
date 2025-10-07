@@ -1,0 +1,131 @@
+﻿<div class="space-y-6">
+  <section class="card space-y-6 border border-slate-200/60">
+    <header class="space-y-2">
+      <h2 class="text-xl font-semibold text-slate-900">Nuevo usuario</h2>
+      <p class="text-sm text-slate-500">Crea cuentas y asigna roles con acceso controlado.</p>
+    </header>
+    <form class="space-y-4" [formGroup]="form" (ngSubmit)="crearUsuario()">
+      <div class="grid gap-4 md:grid-cols-2">
+        <label class="text-sm font-medium text-slate-600">
+          Nombre
+          <input
+            formControlName="nombre"
+            placeholder="Nombre completo"
+            class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+          />
+        </label>
+        <label class="text-sm font-medium text-slate-600">
+          Email
+          <input
+            type="email"
+            formControlName="email"
+            placeholder="correo@empresa.com"
+            class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+          />
+        </label>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <label class="text-sm font-medium text-slate-600">
+          Contraseña
+          <input
+            type="password"
+            formControlName="password"
+            placeholder="Minimo 6 caracteres"
+            class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+          />
+        </label>
+        <label class="text-sm font-medium text-slate-600">
+          Rol
+          <select
+            formControlName="rol"
+            class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+          >
+            <option *ngFor="let rol of roles" [value]="rol">{{ rol }}</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="text-sm font-medium text-slate-600">
+        Sede (opcional)
+        <select
+          formControlName="sede"
+          class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+        >
+          <option value="">Sin asignar</option>
+          <option *ngFor="let sede of sedes()" [value]="sede._id">{{ sede.nombre }}</option>
+        </select>
+      </label>
+
+      <button
+        type="submit"
+        [disabled]="guardando()"
+        class="inline-flex items-center justify-center rounded-2xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-600/20 transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-primary-400"
+      >
+        {{ guardando() ? 'Creando...' : 'Crear usuario' }}
+      </button>
+    </form>
+    <p *ngIf="mensaje()" class="text-sm font-medium text-emerald-600">{{ mensaje() }}</p>
+  </section>
+
+  <section class="space-y-4">
+    <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <h2 class="text-lg font-semibold text-slate-900">Usuarios registrados</h2>
+      <button
+        type="button"
+        class="inline-flex items-center justify-center rounded-2xl border border-rose-400/60 px-4 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 disabled:opacity-50"
+        (click)="eliminarSeleccionado()"
+        [disabled]="!seleccionado()"
+      >
+        Eliminar seleccionado
+      </button>
+    </div>
+
+    <div class="hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-card lg:block">
+      <ag-grid-angular
+        class="ag-theme-quartz"
+        style="width: 100%; height: 520px;"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        [rowData]="usuariosRows()"
+        [rowSelection]="rowSelection"
+        [animateRows]="true"
+        [stopEditingWhenCellsLoseFocus]="true"
+        (gridReady)="onGridReady($event)"
+        (selectionChanged)="onSelectionChanged($event)"
+        (cellValueChanged)="onCellValueChanged($event)"
+      ></ag-grid-angular>
+    </div>
+
+    <div class="space-y-3 lg:hidden">
+      <article *ngFor="let usuario of usuarios()" class="card border border-slate-200/60 shadow-card">
+        <header class="flex items-start justify-between gap-3">
+          <div>
+            <h4 class="text-lg font-semibold text-slate-900">{{ usuario.nombre }}</h4>
+            <p class="text-xs text-slate-500">{{ usuario.email }}</p>
+          </div>
+          <span class="chip bg-primary-100 text-primary-700">{{ usuario.rol }}</span>
+        </header>
+        <div class="mt-3 space-y-2 text-sm text-slate-600">
+          <p><span class="font-semibold">Estado:</span> {{ usuario.activo ? 'Activo' : 'Inactivo' }}</p>
+          <p *ngIf="usuario.sede"><span class="font-semibold">Sede:</span> {{ usuario.sede ? usuario.sede.nombre : 'Sin asignar' }}</p>
+        </div>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button type="button" class="rounded-xl border border-slate-300 px-3 py-2 text-sm" (click)="verEnTabla(usuario._id)">
+            Ver en tabla
+          </button>
+          <button type="button" class="rounded-xl border border-rose-400 px-3 py-2 text-sm text-rose-600" (click)="eliminarDesdeCard(usuario._id)">
+            Eliminar
+          </button>
+        </div>
+      </article>
+    </div>
+
+    <p *ngIf="!usuarios().length && !cargando()" class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+      Sin usuarios registrados.
+    </p>
+    <p *ngIf="cargando()" class="text-sm text-slate-500">Cargando usuarios...</p>
+    <p class="text-xs text-slate-400">Selecciona un registro para editarlo desde la tabla o usa las tarjetas en móvil.</p>
+  </section>
+</div>
+

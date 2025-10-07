@@ -1,0 +1,200 @@
+﻿<div *ngIf="ruta() as data" class="space-y-6">
+  <button type="button" class="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-primary-600" (click)="volver()">
+    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+    Volver
+  </button>
+
+  <header class="flex flex-col gap-3 rounded-3xl bg-gradient-to-r from-slate-900 to-primary-900 p-6 text-white shadow-card">
+    <div>
+      <p class="text-xs uppercase tracking-[0.3em] text-white/60">Ruta asignada</p>
+      <h2 class="text-2xl font-semibold">{{ data.nombre }}</h2>
+      <p class="text-sm text-white/70">{{ data.sedeOrigen.nombre }} → {{ data.sedeDestino.nombre }}</p>
+    </div>
+    <span class="self-start rounded-full bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-wide">
+      {{ data.estado }}
+    </span>
+  </header>
+
+  <section class="grid gap-4 md:grid-cols-4">
+    <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <p class="text-xs uppercase tracking-wide text-slate-400">Grua</p>
+      <p class="text-sm font-semibold text-slate-900">{{ data.grua.codigo }} · {{ data.grua.placa }}</p>
+      <p class="text-xs text-slate-500" *ngIf="data.grua.modelo">Modelo: {{ data.grua.modelo }}</p>
+    </article>
+    <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <p class="text-xs uppercase tracking-wide text-slate-400">Conductor</p>
+      <p class="text-sm font-semibold text-slate-900">{{ data.conductor.nombre }}</p>
+      <p class="text-xs text-slate-500">{{ data.conductor.email }}</p>
+    </article>
+    <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <p class="text-xs uppercase tracking-wide text-slate-400">Inicio</p>
+      <p class="text-sm font-semibold text-slate-900">{{ data.fechaInicio | date: 'shortDate' }}</p>
+      <p class="text-xs text-slate-500" *ngIf="data.fechaFin">Fin: {{ data.fechaFin | date: 'shortDate' }}</p>
+    </article>
+    <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <p class="text-xs uppercase tracking-wide text-slate-400">Resumen</p>
+      <div class="mt-2 space-y-1 text-sm text-slate-700">
+        <p>Gastos: <span class="font-semibold text-rose-600">${{ (data.resumen ? data.resumen.totalGastos : 0) | number: '1.0-0' }}</span></p>
+        <p>Recargas: <span class="font-semibold text-emerald-600">${{ (data.resumen ? data.resumen.totalRecargas : 0) | number: '1.0-0' }}</span></p>
+        <p>
+          Balance:
+          <span class="font-semibold" [class.text-emerald-600]="(data.resumen ? data.resumen.balance : 0) >= 0" [class.text-rose-600]="(data.resumen ? data.resumen.balance : 0) < 0">
+            ${{ (data.resumen ? data.resumen.balance : 0) | number: '1.0-0' }}
+          </span>
+        </p>
+      </div>
+    </article>
+  </section>
+
+  <section *ngIf="puedeRegistrarGasto()" class="card space-y-4 border border-slate-200/60">
+    <h3 class="text-lg font-semibold text-slate-900">{{ gastoEditando() ? 'Editar gasto' : 'Registrar gasto' }}</h3>
+    <form class="space-y-4" [formGroup]="gastoForm" (ngSubmit)="registrarGasto()">
+      <label class="text-sm font-medium text-slate-600">
+        Descripcion
+        <input
+          formControlName="descripcion"
+          placeholder="Ej. Peaje Ruta 40"
+          class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+        />
+      </label>
+      <div class="grid gap-4 md:grid-cols-2">
+        <label class="text-sm font-medium text-slate-600">
+          Categoria
+          <select
+            formControlName="categoria"
+            class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+          >
+            <option *ngFor="let categoria of categorias" [value]="categoria">{{ categoria }}</option>
+          </select>
+        </label>
+        <label class="text-sm font-medium text-slate-600">
+          Monto
+          <input
+            type="number"
+            formControlName="monto"
+            min="1"
+            inputmode="decimal"
+            class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+          />
+        </label>
+      </div>
+      <div class="grid gap-4 md:grid-cols-2">
+        <label class="text-sm font-medium text-slate-600">
+          Fecha
+          <input
+            type="date"
+            formControlName="fecha"
+            class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+          />
+        </label>
+        <label class="text-sm font-medium text-slate-600">
+          Comprobante (URL)
+          <input
+            formControlName="comprobanteUrl"
+            placeholder="https://"
+            class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+          />
+        </label>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button type="submit" class="rounded-2xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-600/20 hover:bg-primary-700">
+          {{ gastoEditando() ? 'Actualizar gasto' : 'Guardar gasto' }}
+        </button>
+        <button type="button" class="rounded-2xl border border-slate-300 px-4 py-2 text-sm" *ngIf="gastoEditando()" (click)="cancelarEdicionGasto()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section *ngIf="puedeRegistrarRecarga()" class="card space-y-4 border border-slate-200/60">
+    <h3 class="text-lg font-semibold text-slate-900">{{ recargaEditando() ? 'Editar recarga' : 'Registrar recarga' }}</h3>
+    <form class="space-y-4" [formGroup]="recargaForm" (ngSubmit)="registrarRecarga()">
+      <label class="text-sm font-medium text-slate-600">
+        Descripcion
+        <input
+          formControlName="descripcion"
+          placeholder="Ej. Recarga de combustible"
+          class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+        />
+      </label>
+      <div class="grid gap-4 md:grid-cols-2">
+        <label class="text-sm font-medium text-slate-600">
+          Monto
+          <input
+            type="number"
+            formControlName="monto"
+            min="1"
+            inputmode="decimal"
+            class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+          />
+        </label>
+        <label class="text-sm font-medium text-slate-600">
+          Fecha
+          <input
+            type="date"
+            formControlName="fecha"
+            class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+          />
+        </label>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button type="submit" class="rounded-2xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-600/20 hover:bg-primary-700">
+          {{ recargaEditando() ? 'Actualizar recarga' : 'Guardar recarga' }}
+        </button>
+        <button type="button" class="rounded-2xl border border-slate-300 px-4 py-2 text-sm" *ngIf="recargaEditando()" (click)="cancelarEdicionRecarga()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="grid gap-4 md:grid-cols-2">
+    <article class="card space-y-3 border border-slate-200/60">
+      <h3 class="text-lg font-semibold text-slate-900">Gastos registrados</h3>
+      <ul class="space-y-3">
+        <li *ngFor="let gasto of gastos()" class="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+          <div>
+            <p class="text-sm font-semibold text-slate-900">{{ gasto.descripcion }}</p>
+            <p class="text-xs text-slate-500">{{ gasto.categoria }} · {{ gasto.fecha | date: 'shortDate' }}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-semibold text-slate-900">${{ gasto.monto.toFixed(0) }}</span>
+            <ng-container *ngIf="puedeGestionarGasto(gasto)">
+              <button type="button" class="text-xs text-primary-600 hover:underline" (click)="editarGasto(gasto)">Editar</button>
+              <button type="button" class="text-xs text-rose-600 hover:underline" (click)="eliminarGasto(gasto)">Eliminar</button>
+            </ng-container>
+          </div>
+        </li>
+      </ul>
+      <p *ngIf="!gastos().length" class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+        Sin gastos registrados.
+      </p>
+    </article>
+    <article class="card space-y-3 border border-slate-200/60">
+      <h3 class="text-lg font-semibold text-slate-900">Recargas</h3>
+      <ul class="space-y-3">
+        <li *ngFor="let recarga of recargas()" class="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+          <div>
+            <p class="text-sm font-semibold text-slate-900">{{ recarga.descripcion }}</p>
+            <p class="text-xs text-slate-500">{{ recarga.fecha | date: 'shortDate' }}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-semibold text-slate-900">${{ recarga.monto.toFixed(0) }}</span>
+            <ng-container *ngIf="puedeGestionarRecarga(recarga)">
+              <button type="button" class="text-xs text-primary-600 hover:underline" (click)="editarRecarga(recarga)">Editar</button>
+              <button type="button" class="text-xs text-rose-600 hover:underline" (click)="eliminarRecarga(recarga)">Eliminar</button>
+            </ng-container>
+          </div>
+        </li>
+      </ul>
+      <p *ngIf="!recargas().length" class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+        Sin recargas registradas.
+      </p>
+    </article>
+  </section>
+
+  <p *ngIf="mensaje()" class="text-sm font-medium text-emerald-600">{{ mensaje() }}</p>
+</div>

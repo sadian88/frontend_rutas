@@ -1,0 +1,92 @@
+<div class="space-y-4">
+  <section
+    *ngFor="let ruta of rutas()"
+    class="card border border-slate-200/60 shadow-card transition hover:-translate-y-1 hover:shadow-lg"
+  >
+    <header class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Ruta asignada</p>
+        <h3 class="text-xl font-semibold text-slate-900">{{ ruta.nombre }}</h3>
+      </div>
+      <span
+        class="chip bg-slate-100 text-slate-600"
+        [ngClass]="{
+          'bg-emerald-100 text-emerald-700': ruta.estado === 'COMPLETADA',
+          'bg-amber-100 text-amber-700': ruta.estado === 'EN_CURSO',
+          'bg-rose-100 text-rose-700': ruta.estado === 'CANCELADA'
+        }"
+      >
+        {{ ruta.estado }}
+      </span>
+    </header>
+
+    <div class="mt-4 grid gap-3 rounded-xl bg-slate-50/80 p-3 sm:grid-cols-2">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-slate-400">Trayecto</p>
+        <p class="font-medium text-slate-800">{{ ruta.sedeOrigen.nombre }} ? {{ ruta.sedeDestino.nombre }}</p>
+      </div>
+      <div>
+        <p class="text-xs uppercase tracking-wide text-slate-400">Fechas</p>
+        <p class="font-medium text-slate-800">
+          {{ ruta.fechaInicio | date: 'shortDate' }}
+          <ng-container *ngIf="ruta.fechaFin">- {{ ruta.fechaFin | date: 'shortDate' }}</ng-container>
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-4 grid gap-3 sm:grid-cols-3">
+      <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-center">
+        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Gastos</p>
+        <p class="mt-1 text-lg font-semibold text-rose-600">
+          {{ formatoMoneda(totalPorRuta(ruta._id).totalGastos) }}
+        </p>
+      </div>
+      <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-center">
+        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Recargas</p>
+        <p class="mt-1 text-lg font-semibold text-emerald-600">
+          {{ formatoMoneda(totalPorRuta(ruta._id).totalRecargas) }}
+        </p>
+      </div>
+      <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-center">
+        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Balance</p>
+        <p
+          class="mt-1 text-lg font-semibold"
+          [class.text-emerald-600]="totalPorRuta(ruta._id).balance >= 0"
+          [class.text-rose-600]="totalPorRuta(ruta._id).balance < 0"
+        >
+          {{ formatoMoneda(totalPorRuta(ruta._id).balance) }}
+        </p>
+      </div>
+    </div>
+
+    <ul class="mt-5 space-y-3" *ngIf="gastosPorRuta(ruta._id).length; else sinGastos">
+      <li
+        *ngFor="let gasto of gastosPorRuta(ruta._id)"
+        class="flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3"
+      >
+        <div>
+          <p class="text-sm font-semibold text-slate-900">{{ gasto.descripcion }}</p>
+          <p class="text-xs text-slate-500">
+            {{ gasto.categoria }} · {{ gasto.fecha | date: 'shortDate' }}
+          </p>
+        </div>
+        <p class="text-sm font-semibold text-slate-900">{{ formatoMoneda(gasto.monto) }}</p>
+      </li>
+    </ul>
+    <ng-template #sinGastos>
+      <p class="mt-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+        Aún no registras gastos en esta ruta.
+      </p>
+    </ng-template>
+
+    <a
+      class="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-600/20 transition hover:bg-primary-700"
+      [routerLink]="['/rutas', ruta._id]"
+    >
+      Registrar gastos o recargas
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m9 5 7 7-7 7" />
+      </svg>
+    </a>
+  </section>
+</div>
