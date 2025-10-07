@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:4000/api',
+  apiUrl: 'https://backend-rutas-1-cciv.onrender.com/api',
 };
