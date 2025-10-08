@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { SedesService } from '../../core/services/sedes.service';
@@ -7,6 +8,8 @@ import { UsuariosService } from '../../core/services/usuarios.service';
 import { Sede, SedePayload, Usuario } from '../../core/models';
 import { AgGridAngular } from 'ag-grid-angular';
 import { CellValueChangedEvent, ColDef, GridApi, GridReadyEvent, SelectionChangedEvent } from 'ag-grid-community';
+import { AuthService } from '../../core/services/auth.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 interface SedeRow {
   id: string;
@@ -32,6 +35,9 @@ export class SedesComponent implements OnInit {
   readonly cargando = signal(false);
   readonly mensaje = signal('');
   private gridApi: GridApi<SedeRow> | null = null;
+  private readonly authService = inject(AuthService);
+  private readonly usuarioActual = toSignal(this.authService.usuario$, { initialValue: null });
+  private readonly notifier = inject(NotificationService);
 
   readonly seleccionadaId = signal<string | null>(null);
   readonly sedeSeleccionada = computed(() => {
@@ -50,6 +56,7 @@ export class SedesComponent implements OnInit {
     resizable: true,
     flex: 1,
   };
+  readonly esAdmin = computed(() => this.usuarioActual()?.rol === 'ADMIN');
 
   readonly sedesColumnDefs: ColDef<SedeRow>[] = [
     { headerName: 'Nombre', field: 'nombre', editable: true },
@@ -139,9 +146,11 @@ export class SedesComponent implements OnInit {
       .crear(body)
       .pipe(finalize(() => this.cargando.set(false)))
       .subscribe((respuesta) => {
-        this.sedes.set([respuesta.sede, ...this.sedes()]);
+        const nuevaSede = this.normalizarSede(respuesta.sede);
+        this.sedes.set([nuevaSede, ...this.sedes()]);
         this.form.reset({ jefe: '' });
         this.mensaje.set('Sede creada correctamente');
+        this.notifier.success('Sede creada correctamente');
       });
   }
 
@@ -207,8 +216,10 @@ export class SedesComponent implements OnInit {
       .pipe(finalize(() => this.cargando.set(false)))
       .subscribe({
         next: (respuesta) => {
-          this.sedes.set(this.sedes().map((sede) => (sede._id === respuesta.sede._id ? respuesta.sede : sede)));
+          const sedeActualizada = this.normalizarSede(respuesta.sede);
+          this.sedes.set(this.sedes().map((sede) => (sede._id === sedeActualizada._id ? sedeActualizada : sede)));
           this.mensaje.set('Sede actualizada');
+          this.notifier.success('Sede actualizada');
         },
         error: () => {
           event.node.setDataValue(field, valorAnterior);
@@ -224,8 +235,10 @@ export class SedesComponent implements OnInit {
       .actualizar(sedeId, payload)
       .pipe(finalize(() => this.cargando.set(false)))
       .subscribe((respuesta) => {
-        this.sedes.set(this.sedes().map((sede) => (sede._id === sedeId ? respuesta.sede : sede)));
+        const sedeActualizada = this.normalizarSede(respuesta.sede);
+        this.sedes.set(this.sedes().map((sede) => (sede._id === sedeId ? sedeActualizada : sede)));
         this.mensaje.set('Jefe actualizado');
+        this.notifier.success('Jefe actualizado');
       });
   }
 
@@ -239,11 +252,20 @@ export class SedesComponent implements OnInit {
   }
 
   eliminarSede() {
+    if (!this.esAdmin()) {
+      this.mensaje.set('Solo un administrador puede eliminar sedes.');
+      this.notifier.warning('Solo un administrador puede eliminar sedes.');
+      return;
+    }
     const seleccion = this.sedeSeleccionada();
     if (!seleccion) {
       return;
     }
-    const confirmar = window.confirm(`Eliminar la sede "${seleccion.nombre}"?`);
+    const confirmar = window.confirm(
+      `Eliminar la sede "${seleccion.nombre}"?\n\n` +
+        'Esta accion tambien eliminara todas las rutas y recargas asociadas a la sede. ' +
+        'La operacion no se puede deshacer.'
+    );
     if (!confirmar) {
       return;
     }
@@ -260,6 +282,7 @@ export class SedesComponent implements OnInit {
           this.seleccionadaId.set(null);
           this.gridApi?.deselectAll();
           this.mensaje.set('Sede eliminada');
+          this.notifier.success('Sede eliminada');
         },
         error: () => {
           this.mensaje.set('No fue posible eliminar la sede');
@@ -302,13 +325,46 @@ export class SedesComponent implements OnInit {
       .obtenerTodas()
       .pipe(finalize(() => this.cargando.set(false)))
       .subscribe((sedes) => {
-        this.sedes.set(sedes);
+        this.sedes.set(sedes.map((sede) => this.normalizarSede(sede)));
         this.seleccionadaId.set(null);
         this.gridApi?.deselectAll();
       });
 
     this.usuariosService
       .listar({ rol: 'JEFE' })
-      .subscribe((usuarios) => this.jefes.set(usuarios));
+      .subscribe((usuarios) => {
+        this.jefes.set(usuarios.map((usuario) => this.normalizarUsuario(usuario)));
+        this.gridApi?.refreshCells({ force: true, columns: ['jefeId'] });
+      });
+  }
+
+  private normalizarUsuario(usuario: Usuario): Usuario {
+    const sede = usuario.sede
+      ? {
+          ...usuario.sede,
+          _id: String(usuario.sede._id),
+          jefe: usuario.sede.jefe
+            ? {
+                ...usuario.sede.jefe,
+                _id: String(usuario.sede.jefe._id),
+                sede: null,
+              }
+            : usuario.sede.jefe ?? null,
+        }
+      : usuario.sede ?? null;
+
+    return {
+      ...usuario,
+      _id: String(usuario._id),
+      sede,
+    };
+  }
+
+  private normalizarSede(sede: Sede): Sede {
+    return {
+      ...sede,
+      _id: String(sede._id),
+      jefe: sede.jefe ? this.normalizarUsuario(sede.jefe) : null,
+    };
   }
 }

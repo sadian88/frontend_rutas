@@ -69,10 +69,10 @@
                                                                       "builder":  "@angular/build:dev-server",
                                                                       "configurations":  {
                                                                                              "production":  {
-                                                                                                                "buildTarget":  "frontend:build:production"
+                                                                                                                "buildTarget":  "frontend_rutas:build:production"
                                                                                                             },
                                                                                              "development":  {
-                                                                                                                 "buildTarget":  "frontend:build:development"
+                                                                                                                 "buildTarget":  "frontend_rutas:build:development"
                                                                                                             }
                                                                                         },
                                                                       "defaultConfiguration":  "development"

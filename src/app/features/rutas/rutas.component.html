@@ -33,7 +33,68 @@
       </label>
     </form>
   </section>
-
+  <section class="space-y-4">
+    <h2 class="text-lg font-semibold text-slate-900">Rutas</h2>
+    <div class="hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-card lg:block">
+      <ag-grid-angular
+        class="ag-theme-quartz"
+        style="width: 100%; height: 520px;"
+        [columnDefs]="rutasColumnDefs"
+        [defaultColDef]="defaultColDef"
+        [rowData]="rutas()"
+        [animateRows]="true"
+        (rowDoubleClicked)="onRutaRowDoubleClicked($event)"
+      ></ag-grid-angular>
+      <p class="mt-3 text-sm text-slate-500">Doble clic en una fila para ver el detalle de la ruta.</p>
+    </div>
+    <div class="space-y-3 lg:hidden">
+      <article *ngFor="let ruta of rutas()" class="card border border-slate-200/60 shadow-card">
+        <header class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Ruta</p>
+            <h3 class="text-lg font-semibold text-slate-900">{{ ruta.nombre }}</h3>
+            <p class="text-xs text-slate-500">{{ ruta.sedeOrigen.nombre }} → {{ ruta.sedeDestino.nombre }}</p>
+          </div>
+          <span
+            class="chip"
+            [ngClass]="{
+              'bg-emerald-100 text-emerald-700': ruta.estado === 'COMPLETADA',
+              'bg-amber-100 text-amber-700': ruta.estado === 'EN_CURSO',
+              'bg-rose-100 text-rose-700': ruta.estado === 'CANCELADA'
+            }"
+          >
+            {{ ruta.estado }}
+          </span>
+        </header>
+        <div class="mt-3 grid gap-2 text-sm text-slate-600">
+          <p><span class="font-semibold">Grua:</span> {{ ruta.grua.codigo }} · {{ ruta.grua.placa }}</p>
+          <p><span class="font-semibold">Conductor:</span> {{ ruta.conductor.nombre }}</p>
+          <p>
+            <span class="font-semibold">Fechas:</span>
+            {{ ruta.fechaInicio | date: 'shortDate' }}<ng-container *ngIf="ruta.fechaFin"> - {{ ruta.fechaFin | date: 'shortDate' }}</ng-container>
+          </p>
+        </div>
+        <div class="mt-3 grid gap-2 rounded-xl bg-slate-50/80 p-3" *ngIf="ruta.resumen">
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-500">Gastos</span>
+            <span class="font-semibold text-rose-600">{{ formatoMoneda(ruta.resumen.totalGastos) }}</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-500">Recargas</span>
+            <span class="font-semibold text-emerald-600">{{ formatoMoneda(ruta.resumen.totalRecargas) }}</span>
+          </div>
+          <div class="flex justify-between text-sm" [class.text-rose-600]="ruta.resumen.balance < 0" [class.text-emerald-600]="ruta.resumen.balance >= 0">
+            <span class="text-slate-500">Balance</span>
+            <span class="font-semibold">{{ formatoMoneda(ruta.resumen.balance) }}</span>
+          </div>
+        </div>
+        <button type="button" class="mt-4 inline-flex w-full items-center justify-center rounded-2xl border border-primary-200 bg-primary-50 px-4 py-2 text-sm font-semibold text-primary-700" (click)="irADetalle(ruta._id)">
+          Abrir detalle
+        </button>
+      </article>
+    </div>
+  </section>
+  
   <section *ngIf="puedeCrear()" class="card space-y-4 border border-slate-200/60">
     <header class="space-y-2">
       <h2 class="text-xl font-semibold text-slate-900">Nueva ruta</h2>
@@ -160,66 +221,6 @@
     <p *ngIf="mensaje()" class="text-sm font-medium text-emerald-600">{{ mensaje() }}</p>
   </section>
 
-  <section class="space-y-4">
-    <h2 class="text-lg font-semibold text-slate-900">Rutas</h2>
-    <div class="hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-card lg:block">
-      <ag-grid-angular
-        class="ag-theme-quartz"
-        style="width: 100%; height: 520px;"
-        [columnDefs]="rutasColumnDefs"
-        [defaultColDef]="defaultColDef"
-        [rowData]="rutas()"
-        [animateRows]="true"
-        (rowDoubleClicked)="onRutaRowDoubleClicked($event)"
-      ></ag-grid-angular>
-      <p class="mt-3 text-sm text-slate-500">Doble clic en una fila para ver el detalle de la ruta.</p>
-    </div>
-    <div class="space-y-3 lg:hidden">
-      <article *ngFor="let ruta of rutas()" class="card border border-slate-200/60 shadow-card">
-        <header class="flex items-start justify-between gap-3">
-          <div>
-            <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Ruta</p>
-            <h3 class="text-lg font-semibold text-slate-900">{{ ruta.nombre }}</h3>
-            <p class="text-xs text-slate-500">{{ ruta.sedeOrigen.nombre }} → {{ ruta.sedeDestino.nombre }}</p>
-          </div>
-          <span
-            class="chip"
-            [ngClass]="{
-              'bg-emerald-100 text-emerald-700': ruta.estado === 'COMPLETADA',
-              'bg-amber-100 text-amber-700': ruta.estado === 'EN_CURSO',
-              'bg-rose-100 text-rose-700': ruta.estado === 'CANCELADA'
-            }"
-          >
-            {{ ruta.estado }}
-          </span>
-        </header>
-        <div class="mt-3 grid gap-2 text-sm text-slate-600">
-          <p><span class="font-semibold">Grua:</span> {{ ruta.grua.codigo }} · {{ ruta.grua.placa }}</p>
-          <p><span class="font-semibold">Conductor:</span> {{ ruta.conductor.nombre }}</p>
-          <p>
-            <span class="font-semibold">Fechas:</span>
-            {{ ruta.fechaInicio | date: 'shortDate' }}<ng-container *ngIf="ruta.fechaFin"> - {{ ruta.fechaFin | date: 'shortDate' }}</ng-container>
-          </p>
-        </div>
-        <div class="mt-3 grid gap-2 rounded-xl bg-slate-50/80 p-3" *ngIf="ruta.resumen">
-          <div class="flex justify-between text-sm">
-            <span class="text-slate-500">Gastos</span>
-            <span class="font-semibold text-rose-600">{{ formatoMoneda(ruta.resumen.totalGastos) }}</span>
-          </div>
-          <div class="flex justify-between text-sm">
-            <span class="text-slate-500">Recargas</span>
-            <span class="font-semibold text-emerald-600">{{ formatoMoneda(ruta.resumen.totalRecargas) }}</span>
-          </div>
-          <div class="flex justify-between text-sm" [class.text-rose-600]="ruta.resumen.balance < 0" [class.text-emerald-600]="ruta.resumen.balance >= 0">
-            <span class="text-slate-500">Balance</span>
-            <span class="font-semibold">{{ formatoMoneda(ruta.resumen.balance) }}</span>
-          </div>
-        </div>
-        <button type="button" class="mt-4 inline-flex w-full items-center justify-center rounded-2xl border border-primary-200 bg-primary-50 px-4 py-2 text-sm font-semibold text-primary-700" (click)="irADetalle(ruta._id)">
-          Abrir detalle
-        </button>
-      </article>
-    </div>
-  </section>
+
 </div>
 

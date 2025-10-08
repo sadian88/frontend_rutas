@@ -11,6 +11,7 @@ import { UsuariosService } from '../../core/services/usuarios.service';
 import { Grua, Ruta, RutaPayload, Sede, Usuario } from '../../core/models';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, RowDoubleClickedEvent } from 'ag-grid-community';
+import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   selector: 'app-rutas',
@@ -29,6 +30,7 @@ export class RutasComponent implements OnInit {
   readonly usuario = signal<Usuario | null>(null);
   readonly cargando = signal(false);
   readonly mensaje = signal('');
+  private readonly notifier = inject(NotificationService);
 
   readonly estados = ['PROGRAMADA', 'EN_CURSO', 'COMPLETADA', 'CANCELADA'];
 
@@ -225,6 +227,7 @@ export class RutasComponent implements OnInit {
       .subscribe((respuesta) => {
         this.rutas.set([respuesta.ruta, ...this.rutas()]);
         this.mensaje.set('Ruta registrada correctamente');
+        this.notifier.success('Ruta registrada correctamente');
         this.crearForm.reset({ estado: 'PROGRAMADA' });
         this.aplicarFiltros();
       });

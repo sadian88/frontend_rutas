@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Subscription, finalize } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { RutasService } from '../../core/services/rutas.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { Gasto, GastoPayload, Recarga, RecargaPayload, Ruta, Usuario } from '../../core/models';
 
 @Component({
@@ -17,6 +18,7 @@ import { Gasto, GastoPayload, Recarga, RecargaPayload, Ruta, Usuario } from '../
 export class RutaDetalleComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly location = inject(Location);
+  private readonly notifier = inject(NotificationService);
 
   readonly ruta = signal<Ruta | null>(null);
   readonly gastos = signal<Gasto[]>([]);
@@ -144,9 +146,11 @@ export class RutaDetalleComponent implements OnInit, OnDestroy {
         if (gastoEnEdicion) {
           this.gastos.set(this.gastos().map((item) => (item._id === gasto._id ? gasto : item)));
           this.mensaje.set('Gasto actualizado');
+          this.notifier.success('Gasto actualizado');
         } else {
           this.gastos.set([gasto, ...this.gastos()]);
           this.mensaje.set('Gasto registrado');
+          this.notifier.success('Gasto registrado');
         }
         this.resetGastoForm();
         this.actualizarResumen();
@@ -200,9 +204,11 @@ export class RutaDetalleComponent implements OnInit, OnDestroy {
         if (recargaEnEdicion) {
           this.recargas.set(this.recargas().map((item) => (item._id === recarga._id ? recarga : item)));
           this.mensaje.set('Recarga actualizada');
+          this.notifier.success('Recarga actualizada');
         } else {
           this.recargas.set([recarga, ...this.recargas()]);
           this.mensaje.set('Recarga registrada');
+          this.notifier.success('Recarga registrada');
         }
         this.resetRecargaForm();
         this.actualizarResumen();
@@ -248,6 +254,7 @@ export class RutaDetalleComponent implements OnInit, OnDestroy {
           this.resetGastoForm();
         }
         this.mensaje.set('Gasto eliminado');
+        this.notifier.success('Gasto eliminado');
         this.actualizarResumen();
       });
   }
@@ -289,6 +296,7 @@ export class RutaDetalleComponent implements OnInit, OnDestroy {
           this.resetRecargaForm();
         }
         this.mensaje.set('Recarga eliminada');
+        this.notifier.success('Recarga eliminada');
         this.actualizarResumen();
       });
   }

@@ -1,62 +1,207 @@
-<div class="reportes">
-  <section class="panel">
-    <h2>Balance de gastos y recargas</h2>
-    <form [formGroup]="form" (ngSubmit)="generarReporte()" class="form">
-      <div class="grid">
-        <label>
-          <span>Agrupacion</span>
-          <select formControlName="agrupacion">
+<div class="space-y-6">
+  <section class="card space-y-6 border border-slate-200/60">
+    <header class="space-y-2">
+      <h2 class="text-xl font-semibold text-slate-900">Reportes financieros</h2>
+      <p class="text-sm text-slate-500">Genera un balance comparativo de gastos y recargas segun los filtros seleccionados.</p>
+    </header>
+
+    <form class="space-y-5" [formGroup]="form" (ngSubmit)="generarReporte()">
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <label class="text-sm font-medium text-slate-600">
+          Agrupacion
+          <select
+            formControlName="agrupacion"
+            class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+          >
             <option value="mes">Por mes</option>
             <option value="ruta">Por ruta</option>
             <option value="sede">Por sede</option>
             <option value="conductor">Por conductor</option>
           </select>
         </label>
-        <label>
-          <span>Desde</span>
-          <input type="date" formControlName="desde" />
+        <label class="text-sm font-medium text-slate-600">
+          Desde
+          <input
+            type="date"
+            formControlName="desde"
+            class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+          />
         </label>
-        <label>
-          <span>Hasta</span>
-          <input type="date" formControlName="hasta" />
+        <label class="text-sm font-medium text-slate-600">
+          Hasta
+          <input
+            type="date"
+            formControlName="hasta"
+            class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+          />
         </label>
-      </div>
-
-      <div class="grid">
-        <label>
-          <span>Sede</span>
-          <select formControlName="sede">
+        <label class="text-sm font-medium text-slate-600">
+          Sede
+          <select
+            formControlName="sede"
+            class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200 disabled:bg-slate-100"
+          >
             <option value="">Todas</option>
             <option *ngFor="let sede of sedes()" [value]="sede._id">{{ sede.nombre }}</option>
           </select>
         </label>
-        <label>
-          <span>Ruta</span>
-          <select formControlName="ruta">
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <label class="text-sm font-medium text-slate-600">
+          Ruta
+          <select
+            formControlName="ruta"
+            class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+          >
             <option value="">Todas</option>
-            <option *ngFor="let ruta of rutas()" [value]="ruta._id">{{ ruta.nombre }}</option>
+            <option *ngFor="let ruta of rutasFiltradas()" [value]="ruta._id">{{ ruta.nombre }}</option>
           </select>
         </label>
-        <label>
-          <span>Conductor</span>
-          <select formControlName="conductor">
+        <label class="text-sm font-medium text-slate-600">
+          Conductor
+          <select
+            formControlName="conductor"
+            class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200 disabled:bg-slate-100"
+          >
             <option value="">Todos</option>
-            <option *ngFor="let conductor of conductores()" [value]="conductor._id">
+            <option *ngFor="let conductor of conductoresFiltrados()" [value]="conductor._id">
               {{ conductor.nombre }}
             </option>
           </select>
         </label>
+        <div class="flex items-end justify-end">
+          <button
+            type="submit"
+            [disabled]="cargando()"
+            class="inline-flex w-full items-center justify-center rounded-2xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-600/20 transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-primary-400"
+          >
+            {{ cargando() ? 'Generando...' : 'Generar reporte' }}
+          </button>
+        </div>
       </div>
-
-      <button type="submit" [disabled]="cargando()">{{ cargando() ? 'Generando...' : 'Generar reporte' }}</button>
     </form>
+
+    <div *ngIf="filtrosActivos().length" class="flex flex-wrap gap-2">
+      <span
+        *ngFor="let filtro of filtrosActivos()"
+        class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"
+      >
+        {{ filtro }}
+      </span>
+    </div>
   </section>
 
-  <section class="resultado" *ngIf="resultados().length">
-    <section class="chart card" *ngIf="chartOptions() as chart">
-      <header class="chart__header">
-        <h3>{{ chartTitle() }}</h3>
-        <small>Datos según filtros aplicados</small>
+  <section class="space-y-4">
+    <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <h2 class="text-lg font-semibold text-slate-900">Resultados del balance</h2>
+      <div class="flex flex-wrap gap-2">
+        <button
+          type="button"
+          class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+          (click)="generarReporte()"
+          [disabled]="cargando()"
+        >
+          Actualizar
+        </button>
+        <button
+          type="button"
+          class="inline-flex items-center justify-center rounded-2xl border border-emerald-300/70 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
+          (click)="descargarCsv()"
+          [disabled]="!detalleRutas().length"
+        >
+          Descargar CSV
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="totales() as resumen" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <article class="card rounded-2xl border border-slate-200/60 bg-white px-5 py-4 shadow-card">
+        <p class="text-sm text-slate-500">Gastos totales</p>
+        <p class="mt-1 text-2xl font-semibold text-rose-600">{{ formatoMoneda(resumen.totalGastos) }}</p>
+      </article>
+      <article class="card rounded-2xl border border-slate-200/60 bg-white px-5 py-4 shadow-card">
+        <p class="text-sm text-slate-500">Recargas totales</p>
+        <p class="mt-1 text-2xl font-semibold text-emerald-600">{{ formatoMoneda(resumen.totalRecargas) }}</p>
+      </article>
+      <article class="card rounded-2xl border border-slate-200/60 bg-white px-5 py-4 shadow-card">
+        <p class="text-sm text-slate-500">Balance general</p>
+        <p
+          class="mt-1 text-2xl font-semibold"
+          [ngClass]="resumen.balance < 0 ? 'text-rose-600' : 'text-primary-600'"
+        >
+          {{ formatoMoneda(resumen.balance) }}
+        </p>
+      </article>
+    </div>
+
+    <section class="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+      <article class="card space-y-3 border border-slate-200/60 bg-white px-5 py-4 shadow-card">
+        <header>
+          <h3 class="text-sm font-semibold text-slate-900">Gastos por sede</h3>
+        </header>
+        <ul class="metric-list">
+          <li *ngFor="let item of sumatorias().gastosPorSede">
+            <span>{{ item.etiqueta || 'Sin sede' }}</span>
+            <span>{{ formatoMoneda(item.total) }}</span>
+          </li>
+          <li *ngIf="!sumatorias().gastosPorSede.length" class="empty">Sin datos disponibles</li>
+        </ul>
+      </article>
+      <article class="card space-y-3 border border-slate-200/60 bg-white px-5 py-4 shadow-card">
+        <header>
+          <h3 class="text-sm font-semibold text-slate-900">Gastos por conductor</h3>
+        </header>
+        <ul class="metric-list">
+          <li *ngFor="let item of sumatorias().gastosPorConductor">
+            <span>{{ item.etiqueta || 'Sin conductor' }}</span>
+            <span>{{ formatoMoneda(item.total) }}</span>
+          </li>
+          <li *ngIf="!sumatorias().gastosPorConductor.length" class="empty">Sin datos disponibles</li>
+        </ul>
+      </article>
+      <article class="card space-y-3 border border-slate-200/60 bg-white px-5 py-4 shadow-card">
+        <header>
+          <h3 class="text-sm font-semibold text-slate-900">Gastos por ruta</h3>
+        </header>
+        <ul class="metric-list">
+          <li *ngFor="let item of sumatorias().gastosPorRuta">
+            <span>{{ item.etiqueta || 'Sin ruta' }}</span>
+            <span>{{ formatoMoneda(item.total) }}</span>
+          </li>
+          <li *ngIf="!sumatorias().gastosPorRuta.length" class="empty">Sin datos disponibles</li>
+        </ul>
+      </article>
+      <article class="card space-y-3 border border-slate-200/60 bg-white px-5 py-4 shadow-card">
+        <header>
+          <h3 class="text-sm font-semibold text-slate-900">Recargas por sede</h3>
+        </header>
+        <ul class="metric-list">
+          <li *ngFor="let item of sumatorias().recargasPorSede">
+            <span>{{ item.etiqueta || 'Sin sede' }}</span>
+            <span>{{ formatoMoneda(item.total) }}</span>
+          </li>
+          <li *ngIf="!sumatorias().recargasPorSede.length" class="empty">Sin datos disponibles</li>
+        </ul>
+      </article>
+      <article class="card space-y-3 border border-slate-200/60 bg-white px-5 py-4 shadow-card">
+        <header>
+          <h3 class="text-sm font-semibold text-slate-900">Recargas por ruta</h3>
+        </header>
+        <ul class="metric-list">
+          <li *ngFor="let item of sumatorias().recargasPorRuta">
+            <span>{{ item.etiqueta || 'Sin ruta' }}</span>
+            <span>{{ formatoMoneda(item.total) }}</span>
+          </li>
+          <li *ngIf="!sumatorias().recargasPorRuta.length" class="empty">Sin datos disponibles</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="card space-y-3 border border-slate-200/60" *ngIf="chartOptions() as chart">
+      <header class="space-y-1">
+        <h3 class="text-lg font-semibold text-slate-900">{{ chartTitle() }}</h3>
+        <p class="text-xs uppercase tracking-wide text-slate-400">Datos segun los filtros aplicados</p>
       </header>
       <apx-chart
         [series]="chart.series"
@@ -69,42 +214,74 @@
       ></apx-chart>
     </section>
 
-    <div class="tabla ag-theme-quartz desktop-only">
+    <div class="hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-card lg:block" *ngIf="detalleRutas().length">
       <ag-grid-angular
-        [columnDefs]="resultadoColumnDefs"
-        [defaultColDef]="defaultColDef"
-        [rowData]="resultados()"
         class="ag-theme-quartz"
+        style="width: 100%; height: 380px;"
+        [columnDefs]="rutasColumnDefs"
+        [defaultColDef]="defaultColDef"
+        [rowData]="detalleRutas()"
         [animateRows]="true"
-        style="width: 100%; height: 320px;"
       ></ag-grid-angular>
     </div>
-    <div class="mobile-list mobile-only">
-      <article class="reporte-card" *ngFor="let item of resultados()">
-        <header>
-          <h4>{{ item.etiqueta }}</h4>
-          <span class="clave">#{{ item.key }}</span>
+
+    <div class="space-y-3 lg:hidden" *ngIf="detalleRutas().length">
+      <article class="card border border-slate-200/60 bg-white p-4 shadow-card" *ngFor="let item of detalleRutas()">
+        <header class="flex items-start justify-between gap-3">
+          <div>
+            <h4 class="text-base font-semibold text-slate-900">{{ item.nombreRuta }}</h4>
+            <p class="text-xs text-slate-500">#{{ item.rutaId }}</p>
+          </div>
+          <span
+            class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"
+            [ngClass]="item.balance < 0 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'"
+          >
+            {{ item.balance < 0 ? 'Saldo negativo' : 'Saldo positivo' }}
+          </span>
         </header>
-        <div class="reporte-card__body">
+        <dl class="mt-3 grid grid-cols-2 gap-3 text-sm text-slate-600">
           <div>
-            <small>Gastos</small>
-            <strong>{{ formatoMoneda(item.totalGastos) }}</strong>
+            <dt class="font-semibold text-slate-500">Fecha inicio</dt>
+            <dd>{{ item.fechaInicio ? (item.fechaInicio | date : 'yyyy/MM/dd') : 'N/A' }}</dd>
           </div>
           <div>
-            <small>Recargas</small>
-            <strong>{{ formatoMoneda(item.totalRecargas) }}</strong>
+            <dt class="font-semibold text-slate-500">Fecha fin</dt>
+            <dd>{{ item.fechaFin ? (item.fechaFin | date : 'yyyy/MM/dd') : 'N/A' }}</dd>
           </div>
-          <div [class.negativo]="item.balance < 0">
-            <small>Balance</small>
-            <strong>{{ formatoMoneda(item.balance) }}</strong>
+          <div>
+            <dt class="font-semibold text-emerald-600">Recargas</dt>
+            <dd>{{ formatoMoneda(item.totalRecargas) }}</dd>
           </div>
-        </div>
+          <div>
+            <dt class="font-semibold text-rose-600">Gastos</dt>
+            <dd>{{ formatoMoneda(item.totalGastos) }}</dd>
+          </div>
+          <div>
+            <dt class="font-semibold text-slate-500">Conductor</dt>
+            <dd>{{ item.conductor.nombre }}</dd>
+          </div>
+          <div>
+            <dt class="font-semibold text-slate-500">Balance</dt>
+            <dd [ngClass]="item.balance < 0 ? 'text-rose-600' : 'text-primary-600'">{{ formatoMoneda(item.balance) }}</dd>
+          </div>
+          <div>
+            <dt class="font-semibold text-slate-500">Sede origen</dt>
+            <dd>{{ item.sedeOrigen.nombre }}</dd>
+          </div>
+          <div>
+            <dt class="font-semibold text-slate-500">Sede destino</dt>
+            <dd>{{ item.sedeDestino.nombre }}</dd>
+          </div>
+        </dl>
       </article>
     </div>
-    <div class="totales" *ngIf="totales() as resumen">
-      <p>Gastos totales: {{ formatoMoneda(resumen.totalGastos) }}</p>
-      <p>Recargas totales: {{ formatoMoneda(resumen.totalRecargas) }}</p>
-      <p [class.negativo]="resumen.balance < 0">Balance general: {{ formatoMoneda(resumen.balance) }}</p>
-    </div>
+
+    <p
+      *ngIf="sinResultados()"
+      class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-500"
+    >
+      No hay resultados para los filtros seleccionados. Ajusta los parametros y vuelve a intentarlo.
+    </p>
+    <p *ngIf="cargando()" class="text-sm text-slate-500">Generando reporte...</p>
   </section>
 </div>

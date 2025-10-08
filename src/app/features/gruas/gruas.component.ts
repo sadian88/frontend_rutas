@@ -8,6 +8,7 @@ import { SedesService } from '../../core/services/sedes.service';
 import { EstadoGrua, Grua, GruaPayload, Sede, Usuario } from '../../core/models';
 import { AgGridAngular } from 'ag-grid-angular';
 import { CellValueChangedEvent, ColDef, GridApi, GridReadyEvent, SelectionChangedEvent } from 'ag-grid-community';
+import { NotificationService } from '../../core/services/notification.service';
 
 interface GruaRow {
   id: string;
@@ -36,6 +37,7 @@ export class GruasComponent implements OnInit {
   readonly mensaje = signal('');
   readonly cargando = signal(false);
   private gridApi: GridApi<GruaRow> | null = null;
+  private readonly notifier = inject(NotificationService);
 
   readonly seleccionadaId = signal<string | null>(null);
   readonly gruaSeleccionada = computed(() => {
@@ -207,10 +209,12 @@ export class GruasComponent implements OnInit {
         next: (respuesta) => {
           this.gruas.set(this.gruas().map((item) => (item._id === respuesta.grua._id ? respuesta.grua : item)));
           this.mensaje.set('Grua actualizada');
+          this.notifier.success('Grua actualizada');
         },
         error: () => {
           event.node.setDataValue(field, valorAnterior);
           this.mensaje.set('No fue posible actualizar la grua');
+          this.notifier.error('No fue posible actualizar la grua');
         },
       });
   }
@@ -246,9 +250,11 @@ export class GruasComponent implements OnInit {
           this.seleccionadaId.set(null);
           this.gridApi?.deselectAll();
           this.mensaje.set('Grua eliminada');
+          this.notifier.success('Grua eliminada');
         },
         error: () => {
           this.mensaje.set('No fue posible eliminar la grua');
+          this.notifier.error('No fue posible eliminar la grua');
         },
       });
   }
@@ -327,6 +333,7 @@ export class GruasComponent implements OnInit {
         this.seleccionadaId.set(null);
         this.form.reset({ estado: 'EN_SERVICIO', sede: this.form.get('sede')?.value || '' });
         this.mensaje.set('Grua registrada correctamente');
+        this.notifier.success('Grua registrada correctamente');
       });
   }
 

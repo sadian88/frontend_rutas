@@ -19,6 +19,7 @@ import {
 } from '../../core/models';
 import { UsuariosService } from '../../core/services/usuarios.service';
 import { SedesService } from '../../core/services/sedes.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 type UsuarioRow = Usuario & { sedeId: string };
 
@@ -41,6 +42,7 @@ export class UsuariosComponent implements OnInit {
   readonly guardando = signal(false);
   readonly mensaje = signal('');
   readonly seleccionado = signal<UsuarioRow | null>(null);
+  private readonly notifier = inject(NotificationService);
 
   readonly roles: Rol[] = ['ADMIN', 'JEFE', 'CONDUCTOR'];
 
@@ -144,6 +146,7 @@ export class UsuariosComponent implements OnInit {
       next: (usuarioActualizado) => {
         this.reemplazarUsuario(usuarioActualizado);
         this.mensaje.set('Usuario actualizado');
+        this.notifier.success('Usuario actualizado');
       },
       error: () => {
         event.node.setDataValue(field, event.oldValue);
@@ -181,6 +184,7 @@ export class UsuariosComponent implements OnInit {
         this.usuarios.set([usuario, ...this.usuarios()]);
         this.form.reset({ rol: 'CONDUCTOR', sede: '' });
         this.mensaje.set('Usuario creado correctamente');
+        this.notifier.success('Usuario creado correctamente');
       });
   }
 
@@ -199,6 +203,7 @@ export class UsuariosComponent implements OnInit {
       this.usuarios.set(this.usuarios().filter((usuario) => usuario._id !== seleccionado._id));
       this.seleccionado.set(null);
       this.mensaje.set('Usuario eliminado');
+      this.notifier.success('Usuario eliminado');
       if (this.gridApi) {
         this.gridApi.deselectAll();
       }
@@ -273,6 +278,7 @@ export class UsuariosComponent implements OnInit {
     this.usuariosService.eliminar(id).subscribe(() => {
       this.usuarios.set(this.usuarios().filter((item) => item._id !== id));
       this.mensaje.set('Usuario eliminado');
+      this.notifier.success('Usuario eliminado');
       this.seleccionado.set(null);
       this.gridApi?.deselectAll();
     });

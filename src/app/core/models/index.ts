@@ -151,6 +151,42 @@ export interface BalanceEntry {
   balance: number;
 }
 
+export interface BalanceGroupTotal {
+  key: string;
+  etiqueta: string;
+  total: number;
+}
+
+export interface BalanceDetalleRuta {
+  rutaId: string;
+  nombreRuta: string;
+  fechaInicio: string;
+  fechaFin?: string | null;
+  totalGastos: number;
+  totalRecargas: number;
+  balance: number;
+  conductor: {
+    _id: string;
+    nombre: string;
+  };
+  sedeOrigen: {
+    _id: string;
+    nombre: string;
+  };
+  sedeDestino: {
+    _id: string;
+    nombre: string;
+  };
+}
+
+export interface BalanceSumatorias {
+  gastosPorSede: BalanceGroupTotal[];
+  gastosPorConductor: BalanceGroupTotal[];
+  gastosPorRuta: BalanceGroupTotal[];
+  recargasPorSede: BalanceGroupTotal[];
+  recargasPorRuta: BalanceGroupTotal[];
+}
+
 export interface BalanceResponse {
   filtrosAplicados: Record<string, unknown>;
   resultados: BalanceEntry[];
@@ -159,4 +195,6 @@ export interface BalanceResponse {
     totalRecargas: number;
     balance: number;
   };
+  detalleRutas: BalanceDetalleRuta[];
+  sumatorias: BalanceSumatorias;
 }
